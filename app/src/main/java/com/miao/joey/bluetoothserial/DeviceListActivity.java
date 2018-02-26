@@ -13,7 +13,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.design.widget.FloatingActionButton;
+//import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -24,6 +24,8 @@ import android.view.MenuItem;
 import android.widget.AdapterView;
 import android.widget.Toast;
 
+import com.getbase.floatingactionbutton.FloatingActionButton;
+import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.miao.joey.bluetoothserial.adapter.DeviceAdapter;
 import com.miao.joey.bluetoothserial.service.BluetoothService;
 import com.miao.joey.bluetoothserial.view.NestedListView;
@@ -31,17 +33,24 @@ import com.miao.joey.bluetoothserial.view.NestedListView;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 思路:
+ * 打开应用自动搜索获取设备(已配对设备与附近设备)
+ * 点击设备列表项进行连接,连接成功自动打开数据接收界面
+ * 未连接设备时,点击悬浮按钮进行设备搜索
+ * 已连接设备时,点击悬浮按钮打开数据接收界面
+ */
 public class DeviceListActivity extends AppCompatActivity {
 
     private static final String TAG = "DeviceListActivity";
     public static final int ACCESS_LOCATION = 1001;
-    private BluetoothAdapter mBluetoothAdapter;
+    private BluetoothAdapter mBluetoothAdapter; // 系统蓝牙适配器,用来开启/搜索/关闭蓝牙功能
     private List<BluetoothDevice> nearbyDevices; // 已配对/附近设备
     private DeviceAdapter nearbyAdapter; // 适配器,将设备信息显示到ListView
-    private NestedListView lv_nearbyDevice;
-    private BluetoothService service;
-    private MyServiceConn conn;
-    private ContentReceiver mReceiver;
+    private NestedListView lv_nearbyDevice; // 设备列表视图
+    private BluetoothService service; // 蓝牙服务
+    private MyServiceConn conn; // 蓝牙服务连接
+    private ContentReceiver mReceiver;  // 广播接收器
     private static Toast toast = null;
 
     @Override
@@ -52,15 +61,31 @@ public class DeviceListActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        final FloatingActionsMenu menuMultipleActions = findViewById(R.id.multiple_actions);
+        final FloatingActionButton actionSearch = findViewById(R.id.action_search);
+        actionSearch.setTitle("搜索设备");
+        actionSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "正在搜索蓝牙设备", Snackbar.LENGTH_LONG)
+                Snackbar.make(view, "正在搜索设备", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
                 doDiscovery();
             }
         });
+        final FloatingActionButton actionView = findViewById(R.id.action_view);
+        actionView.setTitle("观察数据");
+        actionView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (BluetoothService.CONNECT_STATUS!=1){
+                    Snackbar.make(view, "请先连接设备", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                    return;
+                }
+                openReceive();
+            }
+        });
+
         lv_nearbyDevice = findViewById(R.id.lv_nearby_device); // 显示附近设备信息
         nearbyDevices = new ArrayList<>();
         initBluetooth();
@@ -69,10 +94,13 @@ public class DeviceListActivity extends AppCompatActivity {
         // 绑定蓝牙功能服务
         conn = new MyServiceConn();
         bindService(new Intent(this, BluetoothService.class), conn, BIND_AUTO_CREATE);
-        // 注册广播接收器
         doRegisterReceiver();
+        doDiscovery();
     }
 
+    /**
+     * 初始化蓝牙设备(获取BluetoothAdapter并开启蓝牙)
+     */
     private void initBluetooth() {
         // 获得BluetoothAdapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -83,54 +111,29 @@ public class DeviceListActivity extends AppCompatActivity {
         doEnableBt();
     }
 
+    /**
+     * 注册广播接收器
+     */
     private void doRegisterReceiver() {
-        // 注册广播,用于接收BluetoothService消息
         mReceiver = new ContentReceiver();
-        IntentFilter btmessage = new IntentFilter("com.miao.joey.bluetoothcallback.content");
-        registerReceiver(mReceiver, btmessage);
+        IntentFilter btMessage = new IntentFilter("com.miao.joey.bluetoothcallback.content");
+        registerReceiver(mReceiver, btMessage);
         // 注册广播:找到设备.完成搜索
         IntentFilter filter = new IntentFilter();
-        filter.addAction(BluetoothDevice.ACTION_FOUND);
-        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+        filter.addAction(BluetoothDevice.ACTION_FOUND);//发现设备
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);//搜索完成
         filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);//状态改变
         filter.addAction(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);//行动扫描模式改变了
         filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);//动作状态发生了变化
-
 //        filter.setPriority(Integer.MAX_VALUE);// 设置优先级
         registerReceiver(mReceiver, filter);
     }
-    /*public void bluetooth_button(View view) {
-        switch (view.getId()) {
-            case R.id.btn_open:
-                doEnableBt();
-                break;
-            case R.id.btn_close:
-                service.stop();
-                break;
-            case R.id.btn_discovery:
-                if (!doEnableBt()) {
-                    return;
-                }
-                getPermission();
-                nearbyDevices.clear();
-                doDiscovery();
-                break;
-            case R.id.btn_flush:
-                if (!doEnableBt()) {
-                    return;
-                }
-                toast.makeText(DeviceListActivity.this, "正在刷新设备信息", Toast.LENGTH_SHORT).show();
-                initView();
-                break;
 
-//            case R.id.btn_receive:
-                openReceive();
-                break;
-            default:
-                break;
-        }
-    }*/
-
+    /**
+     * 打开蓝牙
+     *
+     * @return true-打开成功  false-打开失败
+     */
     private boolean doEnableBt() {
         if (!mBluetoothAdapter.isEnabled()) {
             mBluetoothAdapter.enable();
@@ -138,20 +141,28 @@ public class DeviceListActivity extends AppCompatActivity {
         return mBluetoothAdapter.isEnabled();
     }
 
+    /**
+     * 打开数据接收界面
+     */
     private void openReceive() {
         Intent receive = new Intent(DeviceListActivity.this, ReceiveActivity.class);
         startActivity(receive);
     }
 
-    private void doDiscovery() {
+    /**
+     * 搜索附近设备
+     *
+     * @return
+     */
+    private boolean doDiscovery() {
         getPermission();
         nearbyDevices.clear();
         doEnableBt();
         if (mBluetoothAdapter.isDiscovering()) {
             mBluetoothAdapter.cancelDiscovery();
         }
-        toast.makeText(DeviceListActivity.this, "正在搜索设备", Toast.LENGTH_SHORT).show();
         mBluetoothAdapter.startDiscovery();
+        return true;
     }
 
     public class MyServiceConn implements ServiceConnection {
@@ -171,14 +182,18 @@ public class DeviceListActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unbindService(conn);
+        unbindService(conn); // 解绑蓝牙服务
         if (mReceiver != null) {
-            unregisterReceiver(mReceiver);
+            unregisterReceiver(mReceiver); // 注销广播接收器
         }
-        mBluetoothAdapter.disable();
+        mBluetoothAdapter.disable(); // 关闭蓝牙
         toast.cancel();
     }
 
+    /**
+     * 广播接收器,接收以下广播:
+     * 连接状态, 搜索状态, 发现的设备
+     */
     public class ContentReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -193,7 +208,6 @@ public class DeviceListActivity extends AppCompatActivity {
                     toast.makeText(DeviceListActivity.this, "连接失败", Toast.LENGTH_SHORT).show();
                 }
             } else if (BluetoothDevice.ACTION_FOUND.equals(action)) { // 发现设备
-                Log.d(TAG, "onReceive: 搜索到设备");
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 if (nearbyDevices == null || !nearbyDevices.contains(device)) {
                     if (nearbyDevices == null) {
@@ -204,7 +218,6 @@ public class DeviceListActivity extends AppCompatActivity {
                 Log.d(TAG, "onReceive: nearbyDevices:" + (nearbyDevices == null ? "null" : nearbyDevices.toString()));
                 showListView();
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-                Log.d(TAG, "onReceive: 搜索完成");
                 toast.makeText(DeviceListActivity.this, "搜索完成", Toast.LENGTH_SHORT).show();
             } else {
                 Log.i(TAG, "onReceive: Nothing");
@@ -212,8 +225,10 @@ public class DeviceListActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * 显示附近设备
+     */
     private void showListView() {
-
         if (nearbyDevices != null) {
             showNearby(nearbyDevices);
         }
@@ -240,6 +255,9 @@ public class DeviceListActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * 获取权限
+     */
     public void getPermission() {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
             int permissionCheck;
@@ -294,6 +312,10 @@ public class DeviceListActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            return true;
+        }else if (id==R.id.action_file_manage){
+            Intent receive = new Intent(DeviceListActivity.this, MessageListActivity.class);
+            startActivity(receive);
             return true;
         }
         return super.onOptionsItemSelected(item);

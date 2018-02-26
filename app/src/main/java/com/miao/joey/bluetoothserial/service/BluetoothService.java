@@ -24,6 +24,7 @@ import java.util.UUID;
 public class BluetoothService extends Service {
 
     private static final String TAG = "ContentService";
+    public static int CONNECT_STATUS =0;
 
     private final BluetoothAdapter mAdapter;
     private ConnectThread mConnectThread;
@@ -98,12 +99,12 @@ public class BluetoothService extends Service {
     public synchronized void connected(BluetoothSocket socket, BluetoothDevice
             device) {
         Log.d(TAG, "connected");
-        // 取消完成连接的线程
+        // 取消连接线程
         if (mConnectThread != null) {
             mConnectThread.cancel();
             mConnectThread = null;
         }
-        // 取消当前正在运行连接的任何线程
+        // 在创建新的线程前重置该线程(只需要一个)
         if (mConnectedThread != null) {
             mConnectedThread.cancel();
             mConnectedThread = null;
@@ -128,6 +129,7 @@ public class BluetoothService extends Service {
             mConnectedThread.cancel();
             mConnectedThread = null;
         }
+        CONNECT_STATUS =0;
         sendContentBroadcast("STOP");
     }
 
@@ -176,15 +178,12 @@ public class BluetoothService extends Service {
         }
 
         public void run() {
-            // Always cancel discovery because it will slow down a connection
             mAdapter.cancelDiscovery();
 
             // 连接BluetoothSocket
             try {
-                // 阻塞方法
-                mmSocket.connect();
+                mmSocket.connect();// 阻塞方法
             } catch (IOException e) {
-                // 关闭 socket
                 try {
                     mmSocket.close();
                 } catch (IOException e2) {
@@ -194,11 +193,12 @@ public class BluetoothService extends Service {
                 return;
             }
 
-            // Reset the ConnectThread because we're done
+            // 连接成功时重置连接线程
             synchronized (this) {
                 mConnectThread = null;
             }
             sendContentBroadcast("CONNECT_SUCCESSFUL");
+            CONNECT_STATUS =1;
             // 开启Connected线程
             connected(mmSocket, mmDevice);
         }
@@ -209,6 +209,7 @@ public class BluetoothService extends Service {
             } catch (IOException e) {
                 Log.e(TAG, "close() of connect socket failed", e);
             }
+            CONNECT_STATUS =0;
         }
     }
 
@@ -243,13 +244,11 @@ public class BluetoothService extends Service {
             mmOutStream = tmpOut;
         }
 
-        // TODO 如何获取数据
         public void run() {
             Log.i(TAG, "BEGIN mConnectedThread");
-            // Keep listening to the InputStream while connected
             while (true) {
                 try {
-                    // Read from the InputStream
+                    // 读取输入流并发送广播
                     inputStreamReader=new InputStreamReader(mmInStream);
                     bufferedReader =new BufferedReader(inputStreamReader);
                     String str=bufferedReader.readLine();

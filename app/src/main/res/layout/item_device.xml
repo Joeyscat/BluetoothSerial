@@ -2,9 +2,10 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="8dp"
+    android:padding="4dp"
+    android:background="#FFFFFF"
     android:orientation="vertical"
-    android:padding="4dp">
+    >
 
     <TextView
         android:id="@+id/item_name"

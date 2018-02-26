@@ -18,6 +18,11 @@ android {
     }
 }
 
+
+repositories {
+    maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }/* 自定义仓库 */
+    mavenCentral()
+}
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:26.1.0'
@@ -25,4 +30,8 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+
+    implementation 'com.scwang.smartrefresh:SmartRefreshLayout:1.0.5.1'
+    implementation 'com.getbase:floatingactionbutton:1.10.1'
+
 }

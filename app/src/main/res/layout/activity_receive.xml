@@ -48,4 +48,35 @@
         android:clickable="false"
         android:onClick="bluetooth_button"
         android:text="文件管理" />
+
+    <com.getbase.floatingactionbutton.FloatingActionsMenu
+        android:id="@+id/multiple_actions_rc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/fab_margin"
+        app:fab_addButtonColorNormal="@color/float_normal"
+        app:fab_addButtonColorPressed="@color/white"
+        app:layout_anchor="@id/app_bar"
+        app:layout_anchorGravity="bottom|end">
+
+        <com.getbase.floatingactionbutton.FloatingActionButton
+            android:id="@+id/action_connect_disconnect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_menu_compass"
+            app:fab_colorNormal="@color/float_normal"
+            app:fab_colorPressed="@color/white"
+            app:fab_title="search"
+            />
+
+        <com.getbase.floatingactionbutton.FloatingActionButton
+            android:id="@+id/action_file_manage_rc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_menu_recent_history"
+            app:fab_colorNormal="@color/float_normal"
+            app:fab_colorPressed="@color/white"
+            app:fab_title="view" />
+
+    </com.getbase.floatingactionbutton.FloatingActionsMenu>
 </LinearLayout>

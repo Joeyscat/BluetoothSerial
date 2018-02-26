@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -15,6 +16,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 
+import com.getbase.floatingactionbutton.FloatingActionButton;
+import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.miao.joey.bluetoothserial.entity.Message;
 import com.miao.joey.bluetoothserial.service.BluetoothService;
 import com.miao.joey.bluetoothserial.util.MessageRepo;
@@ -36,6 +39,24 @@ public class ReceiveActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_receive);
+
+        final FloatingActionButton actionConnect = findViewById(R.id.action_connect_disconnect);
+        actionConnect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "正在连接/断开连接", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+                service.stop();
+            }
+        });
+        final FloatingActionButton actionFileManage = findViewById(R.id.action_view);
+        actionFileManage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent history = new Intent(ReceiveActivity.this, MessageListActivity.class);
+                startActivity(history);
+            }
+        });
 
         mCommand = findViewById(R.id.et_command);
         mContent = findViewById(R.id.tv_content);
@@ -114,7 +135,7 @@ public class ReceiveActivity extends AppCompatActivity {
                 Log.i(TAG, "广播中接收: " + content);
                 SimpleDateFormat d = new SimpleDateFormat("HH:mm:ss");
                 String data = d.format(new Date());
-                showMessage(content);
+                showMessage(content,data);
 
                 //  保存到数据库
                 Message message=new Message();
@@ -126,8 +147,8 @@ public class ReceiveActivity extends AppCompatActivity {
     }
 
     // TODO
-    public void showMessage(String message) {
+    public void showMessage(String message,String data) {
         Log.i(TAG, "显示到UI: "+message);
-        mContent.append(message+"\n");
+        mContent.append(message+"\t"+data+"\n");
     }
 }
