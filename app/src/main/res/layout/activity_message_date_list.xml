@@ -5,10 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MessageActivity">
+    tools:context=".MessageDateListActivity">
 
     <ListView
-        android:id="@+id/message_list"
+        android:id="@+id/message_date_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#29efbb78" />

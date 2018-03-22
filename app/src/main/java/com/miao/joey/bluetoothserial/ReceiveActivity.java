@@ -8,16 +8,15 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
 
-import com.getbase.floatingactionbutton.FloatingActionButton;
-import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.miao.joey.bluetoothserial.entity.Message;
 import com.miao.joey.bluetoothserial.service.BluetoothService;
 import com.miao.joey.bluetoothserial.util.MessageRepo;
@@ -28,6 +27,7 @@ import java.util.Date;
 
 public class ReceiveActivity extends AppCompatActivity {
     private static final String TAG = "ReceiveActivity";
+    private String devicename = BluetoothService.device_connected;
     private BluetoothService service;
     private TextView mContent;
     private EditText mCommand;
@@ -39,24 +39,6 @@ public class ReceiveActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_receive);
-
-        final FloatingActionButton actionConnect = findViewById(R.id.action_connect_disconnect);
-        actionConnect.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "正在连接/断开连接", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-                service.stop();
-            }
-        });
-        final FloatingActionButton actionFileManage = findViewById(R.id.action_view);
-        actionFileManage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent history = new Intent(ReceiveActivity.this, MessageListActivity.class);
-                startActivity(history);
-            }
-        });
 
         mCommand = findViewById(R.id.et_command);
         mContent = findViewById(R.id.tv_content);
@@ -76,18 +58,11 @@ public class ReceiveActivity extends AppCompatActivity {
 
     public void bluetooth_button(View view) {
         switch (view.getId()) {
-            case R.id.btn_close:
-                service.stop();
-                break;
-            case R.id.bt_file_manage:
-                Intent receive = new Intent(ReceiveActivity.this, MessageListActivity.class);
-                startActivity(receive);
-                break;
             case R.id.bt_send: // 发送按钮: ! 停止符 $ 开始符
-                String endSign="\n"; // 结束标志
-                String commandStr= String.valueOf(mCommand.getText())+endSign;
-                byte[] command=commandStr.getBytes();
-                Log.i(TAG, "bluetooth_button: "+ Arrays.toString(command));
+                String endSign = "\n"; // 结束标志
+                String commandStr = String.valueOf(mCommand.getText()) + endSign;
+                byte[] command = commandStr.getBytes();
+                Log.i(TAG, "bluetooth_button: " + Arrays.toString(command));
                 service.write(command);
                 break;
             default:
@@ -103,7 +78,7 @@ public class ReceiveActivity extends AppCompatActivity {
             service = ((BluetoothService.LocalBinder) iBinder).getService();
             // 创建数据库
             if (service != null) {
-                messageRepo=new MessageRepo(ReceiveActivity.this);
+                messageRepo = new MessageRepo(ReceiveActivity.this);
             }
         }
 
@@ -123,6 +98,8 @@ public class ReceiveActivity extends AppCompatActivity {
             Log.i(TAG, "onDestroy: 注销广播");
             unregisterReceiver(mReceiver);
         }
+        // 关闭数据库资源
+        messageRepo.closeDB();
     }
 
     public class ContentReceiver extends BroadcastReceiver {
@@ -133,22 +110,49 @@ public class ReceiveActivity extends AppCompatActivity {
             if ("com.miao.joey.bluetoothcallback.content".equals(action)) {
                 String content = intent.getStringExtra("content");
                 Log.i(TAG, "广播中接收: " + content);
-                SimpleDateFormat d = new SimpleDateFormat("HH:mm:ss");
-                String data = d.format(new Date());
-                showMessage(content,data);
+                SimpleDateFormat d = new SimpleDateFormat("yy-MM-dd");
+                SimpleDateFormat t = new SimpleDateFormat("HH:mm:ss");
+                String date = d.format(new Date());
+                String time = t.format(new Date());
+                showMessage(content, time);
 
                 //  保存到数据库
-                Message message=new Message();
+                Message message = new Message();
                 message.setContent(content);
-                message.setReceive_time(data);
+                message.setReceive_date(date);
+                message.setReceive_time(time);
+                message.setDevice_name(devicename);
                 messageRepo.insert(message);
             }
         }
     }
 
-    // TODO
-    public void showMessage(String message,String data) {
-        Log.i(TAG, "显示到UI: "+message);
-        mContent.append(message+"\t"+data+"\n");
+    // TODO  目前还是TextView，非常丑
+    public void showMessage(String message, String data) {
+        Log.i(TAG, "显示到UI: " + message);
+        mContent.append(message + "\t" + data + "\n");
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_device_list, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        int id = item.getItemId();
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_message_view) {
+
+            return true;
+        } else if (id == R.id.action_file_manage) {
+            Intent receive = new Intent(ReceiveActivity.this, MessageDateListActivity.class);
+            startActivity(receive);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

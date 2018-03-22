@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -16,67 +15,46 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
+
         <EditText
             android:id="@+id/et_command"
-            android:layout_weight="1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:hint="输入指令"
             android:inputType="text" />
 
         <Button
             android:id="@+id/bt_send"
-            android:layout_weight="0"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_weight="0"
             android:clickable="false"
             android:onClick="bluetooth_button"
             android:text="发送指令" />
     </LinearLayout>
 
-    <Button
-        android:id="@+id/btn_close"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:onClick="bluetooth_button"
-        android:text="关闭连接" />
+        android:orientation="horizontal">
 
-    <Button
-        android:id="@+id/bt_file_manage"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:clickable="false"
-        android:onClick="bluetooth_button"
-        android:text="文件管理" />
-
-    <com.getbase.floatingactionbutton.FloatingActionsMenu
-        android:id="@+id/multiple_actions_rc"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/fab_margin"
-        app:fab_addButtonColorNormal="@color/float_normal"
-        app:fab_addButtonColorPressed="@color/white"
-        app:layout_anchor="@id/app_bar"
-        app:layout_anchorGravity="bottom|end">
-
-        <com.getbase.floatingactionbutton.FloatingActionButton
-            android:id="@+id/action_connect_disconnect"
-            android:layout_width="wrap_content"
+        <Button
+            android:id="@+id/btn_close"
+            android:layout_width="0px"
             android:layout_height="wrap_content"
-            android:src="@android:drawable/ic_menu_compass"
-            app:fab_colorNormal="@color/float_normal"
-            app:fab_colorPressed="@color/white"
-            app:fab_title="search"
-            />
+            android:layout_weight="1"
+            android:onClick="bluetooth_button"
+            android:text="关闭连接" />
 
-        <com.getbase.floatingactionbutton.FloatingActionButton
-            android:id="@+id/action_file_manage_rc"
-            android:layout_width="wrap_content"
+        <Button
+            android:id="@+id/bt_file_manage"
+            android:layout_width="0px"
             android:layout_height="wrap_content"
-            android:src="@android:drawable/ic_menu_recent_history"
-            app:fab_colorNormal="@color/float_normal"
-            app:fab_colorPressed="@color/white"
-            app:fab_title="view" />
+            android:layout_weight="1"
+            android:clickable="false"
+            android:onClick="bluetooth_button"
+            android:text="文件管理" />
+    </LinearLayout>
 
-    </com.getbase.floatingactionbutton.FloatingActionsMenu>
 </LinearLayout>

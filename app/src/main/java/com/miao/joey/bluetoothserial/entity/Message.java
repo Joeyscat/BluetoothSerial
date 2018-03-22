@@ -14,11 +14,23 @@ public class Message {
     // 表的字段名
     public static final String KEY_ID = "id";
     public static final String KEY_content = "content";
-    public static final String KEY_time = "receive_time";
+    public static final String KEY_RECEIVE_TIME = "receive_time";
+    public static final String KEY_RECEIVE_DATE = "receive_date";
+    public static final String KEY_DEVICE_NAME = "device_name";
 
     private int message_id;
     private String content;
     private String receive_time;
+    private String receive_date;
+    private String device_name;
+
+    public String getDevice_name() {
+        return device_name;
+    }
+
+    public void setDevice_name(String device_name) {
+        this.device_name = device_name;
+    }
 
     public int getMessage_id() {
         return message_id;
@@ -44,12 +56,22 @@ public class Message {
         this.receive_time = receive_time;
     }
 
+    public String getReceive_date() {
+        return receive_date;
+    }
+
+    public void setReceive_date(String receive_date) {
+        this.receive_date = receive_date;
+    }
+
     @Override
     public String toString() {
         return "Message{" +
                 "message_id=" + message_id +
                 ", content='" + content + '\'' +
                 ", receive_time='" + receive_time + '\'' +
+                ", receive_date='" + receive_date + '\'' +
+                ", device_name='" + device_name + '\'' +
                 '}';
     }
 }

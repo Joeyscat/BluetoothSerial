@@ -1,6 +1,7 @@
 package com.miao.joey.bluetoothserial;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -14,23 +15,25 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 //import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.Toast;
 
-import com.getbase.floatingactionbutton.FloatingActionButton;
-import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.miao.joey.bluetoothserial.adapter.DeviceAdapter;
+import com.miao.joey.bluetoothserial.entity.Message;
 import com.miao.joey.bluetoothserial.service.BluetoothService;
+import com.miao.joey.bluetoothserial.util.MessageRepo;
 import com.miao.joey.bluetoothserial.view.NestedListView;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -40,7 +43,7 @@ import java.util.List;
  * 未连接设备时,点击悬浮按钮进行设备搜索
  * 已连接设备时,点击悬浮按钮打开数据接收界面
  */
-public class DeviceListActivity extends AppCompatActivity {
+public class DeviceListActivity extends AppCompatActivity implements AbsListView.OnScrollListener {
 
     private static final String TAG = "DeviceListActivity";
     public static final int ACCESS_LOCATION = 1001;
@@ -52,41 +55,23 @@ public class DeviceListActivity extends AppCompatActivity {
     private MyServiceConn conn; // 蓝牙服务连接
     private ContentReceiver mReceiver;  // 广播接收器
     private static Toast toast = null;
+    private ProgressDialog connectingDialog;
+    private SwipeRefreshLayout refreshDevice;
+    private View footerView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_list);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        connectingDialog = new ProgressDialog(DeviceListActivity.this);
+        refreshDevice = findViewById(R.id.refresh_device);
+        footerView = getLayoutInflater().inflate(R.layout.refresh_layout, null);
+        lv_nearbyDevice = findViewById(R.id.lv_nearby_device);
+        lv_nearbyDevice.addFooterView(footerView);
+        lv_nearbyDevice.setOnScrollListener(this);
 
-        final FloatingActionsMenu menuMultipleActions = findViewById(R.id.multiple_actions);
-        final FloatingActionButton actionSearch = findViewById(R.id.action_search);
-        actionSearch.setTitle("搜索设备");
-        actionSearch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "正在搜索设备", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-                doDiscovery();
-            }
-        });
-        final FloatingActionButton actionView = findViewById(R.id.action_view);
-        actionView.setTitle("观察数据");
-        actionView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (BluetoothService.CONNECT_STATUS!=1){
-                    Snackbar.make(view, "请先连接设备", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
-                    return;
-                }
-                openReceive();
-            }
-        });
-
-        lv_nearbyDevice = findViewById(R.id.lv_nearby_device); // 显示附近设备信息
         nearbyDevices = new ArrayList<>();
         initBluetooth();
         showListView();
@@ -96,6 +81,16 @@ public class DeviceListActivity extends AppCompatActivity {
         bindService(new Intent(this, BluetoothService.class), conn, BIND_AUTO_CREATE);
         doRegisterReceiver();
         doDiscovery();
+
+        refreshDevice.setColorSchemeResources(android.R.color.holo_blue_bright, android.R.color.holo_green_light,
+                android.R.color.holo_orange_light, android.R.color.holo_red_light);
+
+        refreshDevice.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                doDiscovery();
+            }
+        });
     }
 
     /**
@@ -108,7 +103,18 @@ public class DeviceListActivity extends AppCompatActivity {
             toast.makeText(DeviceListActivity.this, "设备不支持蓝牙", Toast.LENGTH_SHORT).show();
             return;
         }
-        doEnableBt();
+        boolean enable = doEnableBt();
+    }
+
+    /**
+     * ；连接等待的dialog，屏蔽其他控件的交互能力
+     */
+    private void showWaitingDialog() {
+        connectingDialog.setTitle("蓝牙连接");
+        connectingDialog.setMessage("蓝牙连接中...");
+        connectingDialog.setIndeterminate(true);
+        connectingDialog.setCancelable(false); // 不可取消
+        connectingDialog.show();
     }
 
     /**
@@ -135,6 +141,9 @@ public class DeviceListActivity extends AppCompatActivity {
      * @return true-打开成功  false-打开失败
      */
     private boolean doEnableBt() {
+        if (mBluetoothAdapter == null) {
+            return false;
+        }
         if (!mBluetoothAdapter.isEnabled()) {
             mBluetoothAdapter.enable();
         }
@@ -165,6 +174,16 @@ public class DeviceListActivity extends AppCompatActivity {
         return true;
     }
 
+    @Override
+    public void onScrollStateChanged(AbsListView view, int scrollState) {
+
+    }
+
+    @Override
+    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+
+    }
+
     public class MyServiceConn implements ServiceConnection {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
@@ -187,7 +206,8 @@ public class DeviceListActivity extends AppCompatActivity {
             unregisterReceiver(mReceiver); // 注销广播接收器
         }
         mBluetoothAdapter.disable(); // 关闭蓝牙
-        toast.cancel();
+        if (toast != null)
+            toast.cancel();
     }
 
     /**
@@ -207,6 +227,7 @@ public class DeviceListActivity extends AppCompatActivity {
                 } else if ("CONNECT_FAILURE".equals(content)) {
                     toast.makeText(DeviceListActivity.this, "连接失败", Toast.LENGTH_SHORT).show();
                 }
+                connectingDialog.cancel();
             } else if (BluetoothDevice.ACTION_FOUND.equals(action)) { // 发现设备
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 if (nearbyDevices == null || !nearbyDevices.contains(device)) {
@@ -218,7 +239,11 @@ public class DeviceListActivity extends AppCompatActivity {
                 Log.d(TAG, "onReceive: nearbyDevices:" + (nearbyDevices == null ? "null" : nearbyDevices.toString()));
                 showListView();
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-                toast.makeText(DeviceListActivity.this, "搜索完成", Toast.LENGTH_SHORT).show();
+                if (nearbyDevices.isEmpty())
+                    toast.makeText(DeviceListActivity.this, "搜索完成", Toast.LENGTH_SHORT).show();
+                if (refreshDevice.isRefreshing()) {
+                    refreshDevice.setRefreshing(false);//设置不刷新
+                }
             } else {
                 Log.i(TAG, "onReceive: Nothing");
             }
@@ -249,8 +274,13 @@ public class DeviceListActivity extends AppCompatActivity {
                 if (mBluetoothAdapter.isDiscovering()) {
                     mBluetoothAdapter.cancelDiscovery();
                 }
+                if (BluetoothService.CONNECT_STATUS != 0) {
+                    service.stop();
+                }
                 BluetoothDevice selectedDevice = (BluetoothDevice) nearbyAdapter.getItem(position);
                 service.connect(selectedDevice);
+                // 启动连接时开启dialog屏蔽用户操作
+                showWaitingDialog();
             }
         });
     }
@@ -305,18 +335,40 @@ public class DeviceListActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
 
+        int id = item.getItemId();
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_message_view) {
+            if (BluetoothService.CONNECT_STATUS != 1) {
+                toast.makeText(DeviceListActivity.this, "未连接可用设备", Toast.LENGTH_SHORT).show();
+                return true;
+            }
+            openReceive();
             return true;
-        }else if (id==R.id.action_file_manage){
-            Intent receive = new Intent(DeviceListActivity.this, MessageListActivity.class);
+        } else if (id == R.id.action_file_manage) {
+            Intent receive = new Intent(DeviceListActivity.this, MessageDateListActivity.class);
             startActivity(receive);
             return true;
+        } else if (id == R.id.action_nothing) {
+            MessageRepo messageRepo = new MessageRepo(DeviceListActivity.this);
+            String[] devices = {"温度采集", "盐度采集"};
+            String deviceName = devices[(int) ((Math.random() * 2))];
+            SimpleDateFormat d = new SimpleDateFormat("yyyy-MM-dd");
+            SimpleDateFormat t = new SimpleDateFormat("HH:mm:ss");
+            long now = System.currentTimeMillis();
+            String date = d.format(new Date((long) (Math.random() * now)));
+            Message message = new Message();
+            message.setReceive_date(date);
+            message.setDevice_name(deviceName);
+            final int[] wendu = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+            for (int i = 0; i <= 20; i++) {
+                //  保存到数据库
+                String time = t.format(new Date());
+                message.setContent(wendu[(int) (Math.random()*3)] + ""+wendu[(int) (Math.random()*10)] + "℃ --");
+                message.setReceive_time(time);
+                messageRepo.insert(message);
+            }
         }
         return super.onOptionsItemSelected(item);
     }

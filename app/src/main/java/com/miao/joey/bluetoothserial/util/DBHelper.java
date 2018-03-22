@@ -25,17 +25,20 @@ public class DBHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         // 创建数据表
         String CREATE_TABLE_BT_MSG = "CREATE TABLE " + Message.TABLE + "("
-                + Message.KEY_ID +" INTEGER PRIMARY KEY AUTOINCREMENT ,"
-                + Message.KEY_content+" TEXT, "
-                + Message.KEY_time+" TEXT)";
-        Log.i(TAG, "onCreate: "+CREATE_TABLE_BT_MSG);
+                + Message.KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT ,"
+                + Message.KEY_content + " TEXT, "
+                + Message.KEY_RECEIVE_TIME + " TEXT,"
+                + Message.KEY_RECEIVE_DATE + " TEXT,"
+                + Message.KEY_DEVICE_NAME + " TEXT"
+                + ")";
+        Log.i(TAG, "onCreate: " + CREATE_TABLE_BT_MSG);
         sqLiteDatabase.execSQL(CREATE_TABLE_BT_MSG);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
-        // 如果旧表存在,删除
-        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS "+ Message.TABLE);
+        // 如果有旧表存在,删除
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + Message.TABLE);
         Log.i(TAG, "onUpgrade: 删除表");
         // 新建表
         onCreate(sqLiteDatabase);
