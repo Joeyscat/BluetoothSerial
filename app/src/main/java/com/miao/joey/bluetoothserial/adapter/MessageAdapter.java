@@ -45,7 +45,7 @@ public class MessageAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         ViewHolder holder;
         if (convertView == null) {
-            convertView = LayoutInflater.from(context).inflate(R.layout.item_message, null);
+            convertView = LayoutInflater.from(context).inflate(R.layout.item_data, null);
             holder = new ViewHolder();
             holder.item_content = convertView.findViewById(R.id.item_content);
             holder.item_time = convertView.findViewById(R.id.item_time);

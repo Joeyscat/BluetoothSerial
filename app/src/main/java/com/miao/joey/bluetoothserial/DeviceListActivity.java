@@ -293,10 +293,12 @@ public class DeviceListActivity extends AppCompatActivity implements AbsListView
             int permissionCheck;
             permissionCheck = this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION);
             permissionCheck += this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
+            permissionCheck += this.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
             if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
                 this.requestPermissions(
                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.ACCESS_COARSE_LOCATION},
+                                Manifest.permission.ACCESS_COARSE_LOCATION,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         ACCESS_LOCATION);
             } else {
                 Log.d(TAG, "getPermission: 已经获得权限");
@@ -346,7 +348,7 @@ public class DeviceListActivity extends AppCompatActivity implements AbsListView
             openReceive();
             return true;
         } else if (id == R.id.action_file_manage) {
-            Intent receive = new Intent(DeviceListActivity.this, MessageDateListActivity.class);
+            Intent receive = new Intent(DeviceListActivity.this, ManageDataActivity.class);
             startActivity(receive);
             return true;
         } else if (id == R.id.action_nothing) {
@@ -365,7 +367,7 @@ public class DeviceListActivity extends AppCompatActivity implements AbsListView
             for (int i = 0; i <= 20; i++) {
                 //  保存到数据库
                 String time = t.format(new Date());
-                message.setContent(wendu[(int) (Math.random()*3)] + ""+wendu[(int) (Math.random()*10)] + "℃ --");
+                message.setContent(wendu[(int) (Math.random() * 3)] + "" + wendu[(int) (Math.random() * 10)] + "℃ --");
                 message.setReceive_time(time);
                 messageRepo.insert(message);
             }

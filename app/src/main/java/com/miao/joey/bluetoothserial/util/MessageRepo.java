@@ -69,7 +69,8 @@ public class MessageRepo {
                 Message.KEY_DEVICE_NAME +
                 " FROM " + Message.TABLE +
                 " WHERE " + Message.KEY_RECEIVE_DATE +
-                "='" + date + "' and " + Message.KEY_DEVICE_NAME + "='" + device + "'";
+                "='" + date + "' and " + Message.KEY_DEVICE_NAME + "='" + device + "'" +
+                " ORDER BY " + Message.KEY_RECEIVE_TIME;
         Log.i(TAG, "getMessageList: " + selectQuery);
         ArrayList<Message> messageList = new ArrayList<>();
         Cursor cursor = database.rawQuery(selectQuery, null);
@@ -95,7 +96,8 @@ public class MessageRepo {
                 Message.KEY_RECEIVE_DATE +
                 "," + Message.KEY_DEVICE_NAME +
                 " FROM " + Message.TABLE +
-                " GROUP BY " + Message.KEY_RECEIVE_DATE + "," + Message.KEY_DEVICE_NAME;
+                " GROUP BY " + Message.KEY_RECEIVE_DATE + "," + Message.KEY_DEVICE_NAME +
+                " ORDER BY " + Message.KEY_RECEIVE_DATE + " DESC";
         Log.i(TAG, "getDateList: " + selectQuery);
         ArrayList<Message> dateList = new ArrayList<>();
         Cursor cursor = database.rawQuery(selectQuery, null);
@@ -149,7 +151,7 @@ public class MessageRepo {
     public int deleteByDateAndDevice(String date, String deviceName) {
         SQLiteDatabase database = dbHelper.getWritableDatabase();
         Log.i(TAG, "delete: " + date);
-        int deleteCount=database.delete(Message.TABLE, Message.KEY_RECEIVE_DATE + "=? AND "
+        int deleteCount = database.delete(Message.TABLE, Message.KEY_RECEIVE_DATE + "=? AND "
                 + Message.KEY_DEVICE_NAME + "=?", new String[]{date, deviceName});
         database.close();
         return deleteCount;

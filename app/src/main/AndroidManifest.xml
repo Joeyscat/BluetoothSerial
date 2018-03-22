@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
@@ -33,10 +35,10 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MessageDateListActivity"
+            android:name=".ManageDataActivity"
             android:launchMode="singleInstance"></activity>
         <activity
-            android:name=".MessageActivity"
+            android:name=".DataListActivity"
             android:launchMode="singleInstance"></activity>
 
         <service
@@ -44,7 +46,6 @@
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".ManageActivity"></activity>
     </application>
 
 </manifest>

@@ -19,8 +19,8 @@
             android:id="@+id/lv_nearby_device"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_margin="4dp"
-            android:background="#060606" />
+            android:layout_marginHorizontal="@dimen/padding_left_right"
+            android:background="@color/white" />
 
     </android.support.v4.widget.NestedScrollView>
 </LinearLayout>

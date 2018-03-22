@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * 显示某天的数据
  */
-public class MessageActivity extends AppCompatActivity {
+public class DataListActivity extends AppCompatActivity {
     private static final String TAG = "MessageListActivity";
     ListView message_list_view;
     private List<Message> messages;
@@ -24,7 +24,7 @@ public class MessageActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_message_list);
+        setContentView(R.layout.activity_data_list);
         message_list_view = findViewById(R.id.message_list);
 
         // 获得选中日期

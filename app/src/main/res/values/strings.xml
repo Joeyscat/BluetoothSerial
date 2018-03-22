@@ -92,4 +92,6 @@
     <string name="action_setting">设置</string>
     <string name="action_message_view">接收数据</string>
     <string name="action_file_manage">文件管理</string>
+    <string name="btn_output">导出</string>
+    <string name="btn_delete">删除</string>
 </resources>

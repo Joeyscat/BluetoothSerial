@@ -149,7 +149,7 @@ public class ReceiveActivity extends AppCompatActivity {
 
             return true;
         } else if (id == R.id.action_file_manage) {
-            Intent receive = new Intent(ReceiveActivity.this, MessageDateListActivity.class);
+            Intent receive = new Intent(ReceiveActivity.this, ManageDataActivity.class);
             startActivity(receive);
             return true;
         }

@@ -33,7 +33,7 @@ public class MDAdapter extends SlideBaseAdapter {
 
     @Override
     public int[] getBindOnClickViewsIds() {
-        return new int[]{R.id.btn_del}; //
+        return new int[]{R.id.btn_del, R.id.btn_output}; // 需要出发的按钮在此绑定
     }
 
     @Override
@@ -55,7 +55,7 @@ public class MDAdapter extends SlideBaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         ViewHolder viewHolder = new ViewHolder();
         if (convertView == null) {
-            convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.slide_touch_view, null);
+            convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.manage_data_list, null);
             viewHolder.tv_date = convertView.findViewById(R.id.item_date);
             viewHolder.tv_device = convertView.findViewById(R.id.item_device_connected);
             viewHolder.slideTouchView = convertView.findViewById(R.id.mSlide);
@@ -65,7 +65,7 @@ public class MDAdapter extends SlideBaseAdapter {
         } else {
             viewHolder = (ViewHolder) convertView.getTag();
         }
-        bindSlidePosition(viewHolder.slideTouchView,position);
+        bindSlidePosition(viewHolder.slideTouchView, position);
 
         viewHolder.tv_date.setText(String.valueOf(list.get(position).getReceive_date()));
         viewHolder.tv_device.setText(String.valueOf(list.get(position).getDevice_name()));
@@ -74,6 +74,6 @@ public class MDAdapter extends SlideBaseAdapter {
 
     static class ViewHolder {
         SlideTouchView slideTouchView;
-        TextView tv_date,tv_device;
+        TextView tv_date, tv_device;
     }
 }
